@@ -1,13 +1,13 @@
 {
-  "name": "harness-native-plugin-prototype",
-  "displayName": "Harness Plugin Prototype",
-  "version": "0.3.0",
+  "name": "my-second-brain",
+  "displayName": "My Second Brain",
+  "version": "0.1.0",
   "defaultEnabled": false,
-  "description": "Portable Bun skills and a guided native capability tour for Claude Code and Codex",
+  "description": "Portable Bun-powered vault workflows for durable projects, notes, and agent goals",
   "author": {
-    "name": "Prototype"
+    "name": "My Agent Dojo"
   },
-  "repository": "https://github.com/myagentdojo/agent-plugin-template",
+  "repository": "https://github.com/myagentdojo/my-second-brain",
   "license": "MIT",
   "keywords": [
     "agent-plugin",
