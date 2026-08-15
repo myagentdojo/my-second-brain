@@ -29,8 +29,8 @@ Read [the adaptation record](references/source.md) before changing this skill.
    - `result.md`: completion evidence only.
 5. Never create a running activity log. Promote decisions, findings, and proof
    into the canonical note instead.
-6. Ask for approvals only when the next action crosses an existing safety or
-   ownership boundary.
+6. Ask for user approval before irreversible, public, shared, or costly actions,
+   or when the next action crosses a safety or ownership boundary.
 7. Call `create_goal` only after explicit activation. Never infer activation
    from brainstorming, critique, or a request to draft `GOAL.md`.
 8. Omit `token_budget` unless the user explicitly supplies one.
