@@ -6,7 +6,7 @@
     "name": "My Agent Dojo"
   },
   "repository": "https://github.com/myagentdojo/my-second-brain",
-  "license": "MIT",
+  "license": "Proprietary",
   "keywords": [
     "agent-plugin",
     "bun"

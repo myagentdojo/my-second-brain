@@ -251,7 +251,16 @@ export interface InstalledCapabilityEvidence {
 		| { status: "not-proved"; receipt: null }
 		| { status: "proved"; receipt: NativeQualificationEvidence }
 		| { status: "failed"; receipt: NativeQualificationEvidence }
-	portableSkillsWithoutHooks: ["hello-world", "skill-a", "skill-b", "runtime-custody", "capability-tour"]
+	portableSkillsWithoutHooks: [
+		"hello-world",
+		"skill-a",
+		"skill-b",
+		"runtime-custody",
+		"capability-tour",
+		"new-note",
+		"new-project",
+		"ultragoal",
+	]
 }
 
 /** Hash-only conclusions that may be promoted from a private fresh-client receipt. */
@@ -1282,9 +1291,12 @@ export function proveInstalledCapabilityEvidence(
 	const portableSkills = [
 		"capability-tour",
 		"hello-world",
+		"new-note",
+		"new-project",
 		"runtime-custody",
 		"skill-a",
 		"skill-b",
+		"ultragoal",
 	]
 	if (JSON.stringify(installedSkills) !== JSON.stringify(portableSkills)) {
 		throw new Error(`${client} installed portable skill inventory differs`)
@@ -1396,6 +1408,9 @@ export function proveInstalledCapabilityEvidence(
 			"skill-b",
 			"runtime-custody",
 			"capability-tour",
+			"new-note",
+			"new-project",
+			"ultragoal",
 		],
 	}
 }

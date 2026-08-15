@@ -371,6 +371,9 @@ test("automated install evidence binds bytes without claiming native activation"
 				"skill-b",
 				"runtime-custody",
 				"capability-tour",
+				"new-note",
+				"new-project",
+				"ultragoal",
 			],
 		})
 	}
