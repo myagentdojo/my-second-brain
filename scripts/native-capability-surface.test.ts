@@ -124,6 +124,22 @@ test("checked-in manifests expose one coherent tour identity and relative native
 	}
 })
 
+test("vault workflows resolve the configured Super-vault before file discovery", () => {
+	for (const skillId of ["new-note", "new-project", "ultragoal"]) {
+		const skill = readFileSync(join(root, "plugin", "skills", skillId, "SKILL.md"), "utf8")
+		expect(skill).toContain(
+			"Resolve the configured Super-vault through `~/.config/context/vault.md`",
+		)
+	}
+})
+
+test("new-project preserves an unrelated active goal", () => {
+	const skill = readFileSync(join(root, "plugin", "skills", "new-project", "SKILL.md"), "utf8")
+	expect(skill).toContain(
+		"When a matching project has an unrelated active `GOAL.md`, preserve it and create a separate bounded project packet.",
+	)
+})
+
 test("capability tour is one model-only skill with one cross-client reviewer prompt", () => {
 	const skillRoot = join(root, "plugin", "skills", "capability-tour")
 	const skill = readFileSync(join(skillRoot, "SKILL.md"), "utf8")
