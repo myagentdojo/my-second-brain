@@ -107,8 +107,15 @@ Inspect `claude-marketplaces-after-add.json` before installation. Confirm the ma
 ```sh
 jq -e '.[] | select(.id == "PLUGIN_NAME@PLUGIN_NAME" and .scope == "user" and .version == "X.Y.Z" and .enabled == true)' "$PREFLIGHT_ROOT/claude-plugins-active.json"
 INSTALL_PATH=$(jq -r '.[] | select(.id == "PLUGIN_NAME@PLUGIN_NAME" and .scope == "user") | .installPath' "$PREFLIGHT_ROOT/claude-plugins-active.json")
-diff -qr "$PREFLIGHT_ROOT/repository/plugin" "$INSTALL_PATH"
+if test -e "$INSTALL_PATH/.in_use"; then
+  test -d "$INSTALL_PATH/.in_use"
+  CLAUDE_CACHE_MARKER_ENTRIES=$(ls -A "$INSTALL_PATH/.in_use")
+  test -z "$CLAUDE_CACHE_MARKER_ENTRIES"
+fi
+diff -qr -x .in_use "$PREFLIGHT_ROOT/repository/plugin" "$INSTALL_PATH"
 ```
+
+Claude may add the empty `.in_use` directory while the selected cache is loaded. The guard accepts only that empty host-owned marker. Contents beneath it, any other extra path, or any payload-byte difference still fails verification.
 
 Generated Claude manifests install disabled by default. Claude Code clients older than `2.1.154` ignore `defaultEnabled: false`; use a supported client for this review-before-enable sequence. Start a new session or run `/reload-plugins` after verification. Claude automatic updates remain a user or team policy choice.
 
@@ -190,7 +197,7 @@ claude plugin enable PLUGIN_NAME@PLUGIN_NAME --scope "$SCOPE"
 claude plugin list --json > "$PREFLIGHT_ROOT/claude-plugins-target-active.json"
 ```
 
-Inspect the target marketplace JSON before install. After enablement, require the target version, intended scope, host-selected active cache path, and `diff -qr` equality with `$TARGET_PREFLIGHT_ROOT/repository/plugin`. Ignore orphan cache directories that the host did not select.
+Inspect the target marketplace JSON before install. After enablement, require the target version, intended scope, host-selected active cache path, and payload equality with `$TARGET_PREFLIGHT_ROOT/repository/plugin` using the same optional empty `.in_use` guard. Ignore orphan cache directories that the host did not select.
 
 If any step after uninstall fails, restore before doing other work:
 

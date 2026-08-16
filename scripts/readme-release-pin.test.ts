@@ -75,6 +75,27 @@ test("production installation pins each marketplace checkout to a release tag", 
 	expect(productionInstall.match(/Remove the pinned marketplace entry/g)).toHaveLength(2)
 })
 
+test("Claude installation verification permits only its empty host-owned cache marker", async () => {
+	const installing = await Bun.file(installingUrl).text()
+	const claudeInstall = installing.slice(
+		installing.indexOf("## Install in Claude Code"),
+		installing.indexOf("## Install in Codex"),
+	)
+
+	expect(claudeInstall).toContain('if test -e "$INSTALL_PATH/.in_use"; then')
+	expect(claudeInstall).toContain('test -d "$INSTALL_PATH/.in_use"')
+	expect(claudeInstall).toContain(
+		'CLAUDE_CACHE_MARKER_ENTRIES=$(ls -A "$INSTALL_PATH/.in_use")',
+	)
+	expect(claudeInstall).toContain('test -z "$CLAUDE_CACHE_MARKER_ENTRIES"')
+	expect(claudeInstall).toContain(
+		'diff -qr -x .in_use "$PREFLIGHT_ROOT/repository/plugin" "$INSTALL_PATH"',
+	)
+	expect(claudeInstall).not.toContain(
+		'diff -qr "$PREFLIGHT_ROOT/repository/plugin" "$INSTALL_PATH"',
+	)
+})
+
 test("replacement guidance preserves the documented refresh operations", async () => {
 	const installing = await Bun.file(installingUrl).text()
 	expect(installing).toContain("claude plugin marketplace update PLUGIN_NAME")
