@@ -1,6 +1,6 @@
 {
   "name": "my-second-brain",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Portable Bun-powered vault workflows for durable projects, notes, and agent goals",
   "author": {
     "name": "My Agent Dojo"
