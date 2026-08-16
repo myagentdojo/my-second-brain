@@ -96,9 +96,12 @@ test("runtime custody sources generate one thin launcher and checked shell proje
 	expect(installedSkills).toEqual([
 		"capability-tour",
 		"hello-world",
+		"new-note",
+		"new-project",
 		"runtime-custody",
 		"skill-a",
 		"skill-b",
+		"ultragoal",
 	])
 	expect(catalog.skills).not.toHaveProperty("capability-tour")
 

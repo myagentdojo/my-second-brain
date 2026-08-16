@@ -224,9 +224,9 @@ test("template user initializes both harness manifests from one metadata source"
 		hooks: "./hooks/codex/hooks.json",
 		interface: {
 			displayName: "Dojo Hello",
-			brandColor: "#3B5CCC",
-			composerIcon: "./assets/composer-icon.svg",
-			logo: "./assets/logo.svg",
+			brandColor: config.brandColor,
+			composerIcon: config.composerIcon,
+			logo: config.logo,
 		},
 	})
 	for (const field of ["composerIcon", "logo"] as const) {

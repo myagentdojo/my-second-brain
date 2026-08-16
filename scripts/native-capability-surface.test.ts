@@ -86,8 +86,12 @@ test("checked-in manifests expose one coherent tour identity and relative native
 		readFileSync(join(root, "plugin", ".codex-plugin", "plugin.json"), "utf8"),
 	)
 
-	expect(config.name).toBe("harness-native-plugin-prototype")
-	expect(config.defaultPrompts).toEqual(["Run the native plugin capability tour."])
+	expect(config.name).toBe("my-second-brain")
+	expect(config.defaultPrompts).toEqual([
+		"Create a project in my second brain.",
+		"Add durable knowledge to my second brain.",
+		"Set a durable goal for this vault project.",
+	])
 	expect(claudeManifest).toMatchObject({
 		name: config.name,
 		displayName: config.displayName,
@@ -104,9 +108,9 @@ test("checked-in manifests expose one coherent tour identity and relative native
 			longDescription: config.longDescription,
 			capabilities: config.capabilities,
 			defaultPrompt: config.defaultPrompts,
-			brandColor: "#3B5CCC",
-			composerIcon: "./assets/composer-icon.svg",
-			logo: "./assets/logo.svg",
+			brandColor: "#5B6F55",
+			composerIcon: "./assets/vault.svg",
+			logo: "./assets/vault.svg",
 		},
 	})
 	for (const manifest of [claudeManifest, codexManifest]) {
@@ -227,6 +231,7 @@ test("payload contains only the named capability sidecars and no standalone agen
 	expect(inventory.filter((path) => path.startsWith("assets/"))).toEqual([
 		"assets/composer-icon.svg",
 		"assets/logo.svg",
+		"assets/vault.svg",
 	])
 	for (const forbidden of [
 		"agents/",

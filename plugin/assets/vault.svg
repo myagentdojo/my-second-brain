@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="My Second Brain vault">
+  <rect width="64" height="64" rx="14" fill="#5B6F55"/>
+  <path d="M16 50V25l16-11 16 11v25H16Z" fill="none" stroke="#F4F1E8" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M27 50V36h10v14M24 27h16" fill="none" stroke="#F4F1E8" stroke-width="4" stroke-linecap="round"/>
+</svg>

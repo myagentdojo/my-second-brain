@@ -169,9 +169,12 @@ const packagedSkills = entries
 if (JSON.stringify(packagedSkills) !== JSON.stringify([
 	"capability-tour",
 	"hello-world",
+	"new-note",
+	"new-project",
 	"runtime-custody",
 	"skill-a",
 	"skill-b",
+	"ultragoal",
 ])) {
 	throw new Error("package skill inventory does not preserve the exact portable and model-only closure")
 }
@@ -276,6 +279,9 @@ console.log(
 			"skill-b",
 			"runtime-custody",
 			"capability-tour",
+			"new-note",
+			"new-project",
+			"ultragoal",
 		],
 		entries: entries.length,
 		offlinePackageExecution: true,

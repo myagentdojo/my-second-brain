@@ -1633,11 +1633,19 @@ const capabilityHookFiles = [
 	"hooks/fixture/lifecycle-mechanics-proof.source.json",
 	"hooks/native-capability-hook",
 ].sort(compareCodeUnits)
-const capabilityAssetFiles = ["assets/composer-icon.svg", "assets/logo.svg"].sort(compareCodeUnits)
+const capabilityAssetFiles = [
+	"assets/composer-icon.svg",
+	"assets/logo.svg",
+	"assets/vault.svg",
+].sort(compareCodeUnits)
 const modelOnlySkillFiles = [
 	"skills/capability-tour/SKILL.md",
 	"skills/capability-tour/references/capability-reviewer.md",
+	"skills/new-note/SKILL.md",
+	"skills/new-project/SKILL.md",
 	"skills/runtime-custody/SKILL.md",
+	"skills/ultragoal/SKILL.md",
+	"skills/ultragoal/references/source.md",
 ]
 const allowedPayloadSurfaces = new Set([
 	".claude-plugin",
