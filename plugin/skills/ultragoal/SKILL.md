@@ -18,25 +18,26 @@ Read [the adaptation record](references/source.md) before changing this skill.
 
 ## Workflow
 
-1. Ground the request in the owning vault project and relevant source material.
-2. Decide whether a persistent goal adds value. Keep short work as an ordinary
+1. Resolve the configured Super-vault through `~/.config/context/vault.md`.
+2. Ground the request in the owning vault project and relevant source material.
+3. Decide whether a persistent goal adds value. Keep short work as an ordinary
    task.
-3. Define one concrete objective, explicit boundaries, acceptance checks, and a
+4. Define one concrete objective, explicit boundaries, acceptance checks, and a
    verifier.
-4. Keep durable state in the project packet:
+5. Keep durable state in the project packet:
    - `README.md`: current state, ownership links, and next action.
    - `GOAL.md`: optional detail for a bounded active outcome.
    - `result.md`: completion evidence only.
-5. Never create a running activity log. Promote decisions, findings, and proof
+6. Never create a running activity log. Promote decisions, findings, and proof
    into the canonical note instead.
-6. Ask for user approval before irreversible, public, shared, or costly actions,
+7. Ask for user approval before irreversible, public, shared, or costly actions,
    or when the next action crosses a safety or ownership boundary.
-7. Call `create_goal` only after explicit activation. Never infer activation
+8. Call `create_goal` only after explicit activation. Never infer activation
    from brainstorming, critique, or a request to draft `GOAL.md`.
-8. Omit `token_budget` unless the user explicitly supplies one.
-9. Continue until the acceptance checks pass or a genuine blocker prevents the
+9. Omit `token_budget` unless the user explicitly supplies one.
+10. Continue until the acceptance checks pass or a genuine blocker prevents the
    next safe action.
-10. Mark the goal complete only after the verifier confirms the result and the
+11. Mark the goal complete only after the verifier confirms the result and the
     project packet records the evidence.
 
 ## Goal Packet

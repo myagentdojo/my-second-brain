@@ -22,11 +22,13 @@ const claude = dryRun("claude")
 const codex = dryRun("codex")
 
 if (
+	resolve(claude.source) !== resolve(root, ".dev", "claude", "plugin") ||
 	!claude.install.includes("--plugin-dir") ||
-	!claude.install.includes("--settings") ||
+	!claude.install.includes(JSON.stringify(claude.source)) ||
+	claude.install.includes("--settings") ||
 	!claude.reload.includes("/reload-plugins")
 ) {
-	throw new Error("Claude plan does not use the native source-load and reload boundary")
+	throw new Error("Claude plan does not use the staged native source-load and reload boundary")
 }
 if (!codex.install.includes("plugin add") || !codex.reload.includes("fresh Codex task")) {
 	throw new Error("Codex plan does not use the native cached-install and fresh-task boundary")
@@ -92,7 +94,7 @@ console.log(
 	JSON.stringify({
 		ok: true,
 		development: {
-			claude: "canonical plugin/ + Bun watcher + /reload-plugins",
+			claude: "complete staged copy + session activation + Bun watcher + /reload-plugins",
 			codex: "full staged copy + cachebuster + reinstall + fresh task",
 		},
 		production: "release PR + proof + tag + GitHub Release + harness update",
