@@ -9,11 +9,12 @@ import {
 
 const root = resolve(import.meta.dir, "..")
 const negativeSuiteFile = "scripts/runtime-custody-exec.test.ts"
+const negativeSuiteTimeoutMs = 10_000
 
 // Step 1: the exhaustive negative suite is the custody behavior proof,
 // including concurrency, interruption, and killed-writer coverage.
 const suite = Bun.spawnSync({
-	cmd: [process.execPath, "test", negativeSuiteFile],
+	cmd: [process.execPath, "test", "--timeout", String(negativeSuiteTimeoutMs), negativeSuiteFile],
 	cwd: root,
 	env: { ...process.env },
 	stdout: "inherit",

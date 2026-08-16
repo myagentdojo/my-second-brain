@@ -98,7 +98,7 @@ bun run dev -- codex --check
 bun run dev:claude
 ```
 
-The command builds portable JavaScript, watches runtime source, skills, hooks, and manifests, launches `claude --plugin-dir ./plugin`, and disables the installed production plugin only inside that process. After an edit, wait for the successful rebuild, then run `/reload-plugins` in the same Claude session.
+The command builds portable JavaScript, copies the complete payload into ignored `.dev` staging, and changes only the staged manifest to enable that session-only plugin. The canonical install payload remains disabled by default. It watches runtime source, skills, hooks, and manifests, then launches `claude --plugin-dir` against the staged copy. After an edit, wait for the successful rebuild, then run `/reload-plugins` in the same Claude session.
 
 Claude development completes when the reloaded session discovers and runs the changed skill from the checkout.
 

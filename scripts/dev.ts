@@ -16,14 +16,10 @@ import { copyPluginPayload } from "./plugin-files"
 import { loadPluginConfig } from "./plugin-config"
 
 const root = resolve(import.meta.dir, "..")
-const pluginRoot = join(root, "plugin")
 const pluginConfig = loadPluginConfig(root)
 const pluginName = pluginConfig.name
-const productionPluginId = `${pluginName}@${pluginName}`
-const claudeSessionSettings = JSON.stringify({
-	enabledPlugins: { [productionPluginId]: false },
-})
 const developmentMarketplaceName = `${pluginName}-dev`
+const claudeDevelopmentRoot = join(root, ".dev", "claude", "plugin")
 const developmentRoot = join(root, ".dev", "codex-marketplace")
 const stagedPluginRoot = join(developmentRoot, "plugins", pluginName)
 
@@ -123,6 +119,17 @@ function cachebuster(): string {
 	return new Date().toISOString().replaceAll(/[-:TZ.]/g, "").slice(0, 14)
 }
 
+function stageClaudePlugin(): void {
+	rmSync(claudeDevelopmentRoot, { recursive: true, force: true })
+	mkdirSync(claudeDevelopmentRoot, { recursive: true })
+	copyPluginPayload(root, claudeDevelopmentRoot)
+
+	const manifestPath = join(claudeDevelopmentRoot, ".claude-plugin", "plugin.json")
+	const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+	manifest.defaultEnabled = true
+	writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+}
+
 function stageCodexPlugin(): string {
 	rmSync(stagedPluginRoot, { recursive: true, force: true })
 	mkdirSync(stagedPluginRoot, { recursive: true })
@@ -177,13 +184,16 @@ function codexMarketplaceExists(): boolean {
 
 async function runClaude(options: Options): Promise<void> {
 	build()
+	stageClaudePlugin()
 	if (options.check) {
-		console.log("Claude development check passed: canonical plugin build is current.")
+		console.log(
+			"Claude development check passed: session-only payload staged without profile changes.",
+		)
 		return
 	}
 	if (!options.launch) {
 		console.log(
-			`Claude source is ready. Launch with: claude --settings ${JSON.stringify(claudeSessionSettings)} --plugin-dir ${JSON.stringify(pluginRoot)}`,
+			`Claude source is ready. Launch with: claude --plugin-dir ${JSON.stringify(claudeDevelopmentRoot)}`,
 		)
 		return
 	}
@@ -195,21 +205,19 @@ async function runClaude(options: Options): Promise<void> {
 			rebuildTimer = setTimeout(() => {
 				console.error("\nPlugin source changed. Rebuilding portable distribution...")
 				build()
+				stageClaudePlugin()
 				console.error("Build complete. Run /reload-plugins in Claude Code.\n")
 			}, 100)
 		}),
 	)
 
-	const claude = Bun.spawn(
-		["claude", "--settings", claudeSessionSettings, "--plugin-dir", pluginRoot],
-		{
+	const claude = Bun.spawn(["claude", "--plugin-dir", claudeDevelopmentRoot], {
 			cwd: root,
 			env: process.env,
 			stdin: "inherit",
 			stdout: "inherit",
 			stderr: "inherit",
-		},
-	)
+		})
 	const exitCode = await claude.exited
 	for (const watcher of watchers) watcher.close()
 	process.exitCode = exitCode
@@ -242,10 +250,10 @@ async function main(): Promise<void> {
 		const plan = {
 			harness: options.harness,
 			build: "bun run build",
-			source: isClaude ? pluginRoot : stagedPluginRoot,
+			source: isClaude ? claudeDevelopmentRoot : stagedPluginRoot,
 			install:
 				isClaude
-					? `claude --settings ${JSON.stringify(claudeSessionSettings)} --plugin-dir ${JSON.stringify(pluginRoot)}`
+					? `claude --plugin-dir ${JSON.stringify(claudeDevelopmentRoot)}`
 					: `codex plugin add ${pluginName}@${developmentMarketplaceName}`,
 			reload:
 				isClaude
