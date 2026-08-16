@@ -7,7 +7,7 @@
   "author": {
     "name": "My Agent Dojo"
   },
-  "repository": "https://github.com/myagentdojo/my-second-brain",
+  "repository": "https://github.com/myagentdojo/my-second-brain-plugin",
   "license": "Proprietary",
   "keywords": [
     "agent-plugin",

@@ -30,7 +30,7 @@ const tagRulesetRepair =
 test("public readiness process reaches the configured hosted-canary success path", () => {
 	const fixtureRoot = mkdtempSync(join(tmpdir(), "repository-readiness-process-"))
 	const fakeGhPath = join(fixtureRoot, "gh")
-	const repository = "myagentdojo/my-second-brain"
+	const repository = "myagentdojo/my-second-brain-plugin"
 	const publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICanary"
 	const responses: Record<string, unknown> = {
 		[`repos/${repository}`]: {
