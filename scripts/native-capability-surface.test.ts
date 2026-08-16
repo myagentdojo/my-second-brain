@@ -124,16 +124,24 @@ test("checked-in manifests expose one coherent tour identity and relative native
 	}
 })
 
-test("vault workflows resolve the configured Super-vault before file discovery", () => {
+test("vault workflow instructions resolve the configured Super-vault before discovery", () => {
+	const resolutionText =
+		"Resolve the configured Super-vault through `~/.config/context/vault.md`"
+	const discoveryText = {
+		"new-note": "Read the vault root",
+		"new-project": "Read the vault root",
+		ultragoal: "Ground the request",
+	} as const
 	for (const skillId of ["new-note", "new-project", "ultragoal"]) {
 		const skill = readFileSync(join(root, "plugin", "skills", skillId, "SKILL.md"), "utf8")
-		expect(skill).toContain(
-			"Resolve the configured Super-vault through `~/.config/context/vault.md`",
+		expect(skill).toContain(resolutionText)
+		expect(skill.indexOf(resolutionText)).toBeLessThan(
+			skill.indexOf(discoveryText[skillId as keyof typeof discoveryText]),
 		)
 	}
 })
 
-test("new-project preserves an unrelated active goal", () => {
+test("new-project instructions preserve an unrelated active goal in a separate packet", () => {
 	const skill = readFileSync(join(root, "plugin", "skills", "new-project", "SKILL.md"), "utf8")
 	expect(skill).toContain(
 		"When a matching project has an unrelated active `GOAL.md`, preserve it and create a separate bounded project packet.",

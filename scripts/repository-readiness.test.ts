@@ -92,6 +92,10 @@ test("public readiness process reaches the configured hosted-canary success path
 	}
 	const fakeGhSource = `#!/usr/bin/env bun
 const responses = ${JSON.stringify(responses)}
+if (process.env.GH_TOKEN !== undefined || process.env.GITHUB_TOKEN !== undefined) {
+  console.error("unexpected GitHub authentication token")
+  process.exit(1)
+}
 const endpoint = process.argv.at(-1)
 if (typeof endpoint !== "string" || !Object.hasOwn(responses, endpoint)) {
   console.error(\`unexpected gh endpoint: \${String(endpoint)}\`)

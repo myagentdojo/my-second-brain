@@ -158,7 +158,7 @@ skill id + arguments + invocation identity
 | Runtime | Closed bundles, generated launchers, and one Bun custody engine | Executes the shared launcher | Executes the shared launcher |
 | Manifest | Plugin identity only | Claude-native manifest | Codex-native manifest |
 | Lifecycle hooks | One shared fail-open mechanics handler | Native `SessionStart`/`Stop` declaration; plugin enablement controls activation | Native `SessionStart`/`Stop` declaration; exact hook definition requires user trust |
-| Development refresh | Source and payload | Direct checkout plus `/reload-plugins` | Staged reinstall plus a fresh task |
+| Development refresh | Source and payload | Staged payload plus `/reload-plugins` | Staged reinstall plus a fresh task |
 | Harness-only features | Nothing by default | Keep Claude-only components native | Keep Codex-only components native |
 
 Use [`CONTEXT.md`](CONTEXT.md) for canonical language. The architecture rationale lives in the ADRs for [one payload with native adapters](docs/adr/0001-one-payload-native-harness-adapters.md), [shared runtime custody](docs/adr/0005-shared-runtime-custody.md), [one Bun runtime](docs/adr/0006-single-bun-runtime-tier.md), and [closed workspace bundles](docs/adr/0007-workspace-authoring-bundled-distribution.md).
@@ -182,7 +182,7 @@ Use [`CONTEXT.md`](CONTEXT.md) for canonical language. The architecture rational
 - Bun is pinned by version and per-target archive/executable digests; users do not install or pin it themselves.
 - Publisher-reviewed bundles and dependencies execute with the user's normal Bun and OS capabilities. This is not a sandbox or an untrusted-plugin runtime.
 - The build rejects native addons, statically visible computed loaders and direct `eval`/`Function` use, undeclared assets, and runtime package installation. These are deterministic bundle-hygiene checks, not adversarial capability confinement; publisher review owns indirect or obfuscated code, and architecture-layer isolation owns untrusted code ([ADR 0006](docs/adr/0006-single-bun-runtime-tier.md)).
-- Claude reloads a direct development plugin in the existing session. Codex needs a staged reinstall and fresh task.
+- Claude reloads the staged development plugin in the existing session. Codex needs a staged reinstall and fresh task.
 - The capability-tour `SessionStart`/`Stop` sidecar is a fail-open lifecycle mechanics proof, not a production integrity or security guarantee. Runtime setup hooks, prewarm, doctor, inventory, and prune commands remain absent.
 - Managed, workspace-installed, or non-removable plugins require administrator replacement or rollback.
 - Vendor plugin specifications change. Recheck the official documentation linked from the [installation guide](docs/installing.md) and [maintainer index](docs/releasing.md) when manifests, discovery, installation, or reload behavior changes.
