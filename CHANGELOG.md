@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/myagentdojo/my-second-brain-plugin/compare/v0.1.1...v0.1.2) (2026-08-16)
+
+
+### Bug Fixes
+
+* update repository identity after rename ([#5](https://github.com/myagentdojo/my-second-brain-plugin/issues/5)) ([25406c3](https://github.com/myagentdojo/my-second-brain-plugin/commit/25406c3f8edf4b3fff3c18de27b9bdaa178a8abe))
+
 ## [0.1.1](https://github.com/myagentdojo/my-second-brain/compare/v0.1.0...v0.1.1) (2026-08-16)
 
 
