@@ -70,6 +70,32 @@ test("no recovery step is a bare rerun of the command that failed", () => {
 	expect(looping).toEqual([])
 })
 
+test("no object declares the recovery step twice", () => {
+	// A duplicate key is legal JavaScript and the last one silently wins, so a
+	// stale value can outlive the edit that was meant to replace it.
+	for (const { name, source } of files) {
+		const duplicates: string[] = []
+		const openedAt: number[] = []
+		const counts: number[] = []
+		source.split("\n").forEach((text, index) => {
+			for (const character of text) {
+				if (character === "{") {
+					openedAt.push(index + 1)
+					counts.push(0)
+				} else if (character === "}") {
+					const count = counts.pop()
+					const opened = openedAt.pop()
+					if (count !== undefined && count > 1) duplicates.push(`${name}:${opened}`)
+				}
+			}
+			if (/^\s*nextAction\s*:/.test(text) && counts.length > 0) {
+				counts[counts.length - 1] = (counts[counts.length - 1] as number) + 1
+			}
+		})
+		expect(duplicates).toEqual([])
+	}
+})
+
 test("the constructor keeps no default recovery step to inherit", () => {
 	for (const { source } of files) {
 		expect(source).not.toMatch(/nextAction\s*=\s*options\.nextAction\s*\?\?/)

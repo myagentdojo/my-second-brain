@@ -526,8 +526,6 @@ function inspectState(
 			code: "PLUGIN_STATE_UNREADABLE",
 			nextAction: "Confirm `claude plugin list --json` runs and prints JSON.",
 			label: "Claude Plugin Installation inspection",
-			nextAction:
-				"Confirm `claude --version` runs and prints a version.",
 		},
 	)
 	const marketplaces = jsonCommand<ClaudeMarketplaceListEntry[]>(
