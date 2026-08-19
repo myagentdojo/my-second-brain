@@ -8,6 +8,10 @@ import {
 	runClaudeDevelopmentInstallation,
 } from "./claude-development-installation"
 import type { CommandRunner } from "./command-runner"
+import { loadPluginConfig } from "./plugin-config"
+
+const repositoryRoot = join(import.meta.dir, "..")
+const pluginName = loadPluginConfig(repositoryRoot).name
 
 const created: string[] = []
 const restoreReadable: string[] = []
@@ -32,8 +36,8 @@ function versionDirectory(profile: string): string {
 		profile,
 		"plugins",
 		"cache",
-		"my-second-brain-dev",
-		"my-second-brain",
+		`${pluginName}-dev`,
+		pluginName,
 		"0.1.2-fake",
 	)
 	mkdirSync(version, { recursive: true })
@@ -55,7 +59,7 @@ async function check(profile: string) {
 	return runClaudeDevelopmentInstallation({
 		operation: "check",
 		apply: false,
-		repositoryRoot: join(import.meta.dir, ".."),
+		repositoryRoot,
 		environment: { CLAUDE_CONFIG_DIR: profile, HOME: profile, PATH: process.env.PATH },
 		runner: unlistedClaudeRunner(),
 	})
@@ -66,7 +70,7 @@ async function codeFrom(operation: "check" | "install", profile: string): Promis
 		await runClaudeDevelopmentInstallation({
 			operation,
 			apply: false,
-			repositoryRoot: join(import.meta.dir, ".."),
+			repositoryRoot,
 			environment: { CLAUDE_CONFIG_DIR: profile, HOME: profile, PATH: process.env.PATH },
 			runner: unlistedClaudeRunner(),
 		})
@@ -134,7 +138,7 @@ test("install refuses the same orphaned cache check refuses", async () => {
 test("check tolerates the residue restore leaves with --keep-data", async () => {
 	const profile = profileRoot()
 	const version = versionDirectory(profile)
-	const payload = join(import.meta.dir, "..", "plugin")
+	const payload = join(repositoryRoot, "plugin")
 	symlinkSync(join(payload, "skills"), join(version, "skills"))
 	writeFileSync(join(version, ".claude-plugin-link"), JSON.stringify({ target: payload }))
 	writeFileSync(join(version, ".orphaned_at"), new Date(0).toISOString())
@@ -148,11 +152,11 @@ test("check tolerates the residue restore leaves with --keep-data", async () => 
 test("install reclaims the residue restore leaves rather than locking itself out", async () => {
 	const profile = profileRoot()
 	const version = versionDirectory(profile)
-	const payload = join(import.meta.dir, "..", "plugin")
+	const payload = join(repositoryRoot, "plugin")
 	symlinkSync(join(payload, "skills"), join(version, "skills"))
 	writeFileSync(join(version, ".claude-plugin-link"), JSON.stringify({ target: payload }))
 
-	expect(await codeFrom("install", profile)).not.toBe("DEVELOPMENT_CACHE_ORPHANED")
+	expect(await codeFrom("install", profile)).toBe("NO_ERROR")
 })
 
 test("a cache whose marker names another checkout stays an orphan", async () => {
@@ -201,7 +205,7 @@ test("a failing command reports its first output line as the cause", async () =>
 	const run = runClaudeDevelopmentInstallation({
 		operation: "check",
 		apply: false,
-		repositoryRoot: join(import.meta.dir, ".."),
+		repositoryRoot,
 		environment: { CLAUDE_CONFIG_DIR: profile, HOME: profile, PATH: process.env.PATH },
 		runner: refusingRunner,
 	})

@@ -15,12 +15,25 @@ names a path and git decides what that path holds. After a build,
 
 Run `bun run dev -- claude check --json --no-input`.
 
-The JSON answers three questions, and every branch below reads them:
+Take the first branch that matches, in this order. A failure envelope carries
+no `current` object, so an unread `error.code` reads as an absent installation
+and sends the next step into a command the lifecycle refuses.
 
-- `current.development` — `installed`, `marketplace-only`, or `absent`.
-- `current.linkedToCanonicalPayload` — whether the link resolves to this
-  checkout's payload.
-- `error.code` when `ok` is false.
+1. `ok` is false — dispatch on `error.code`:
+   - `DEVELOPMENT_CACHE_ORPHANED` or `DEVELOPMENT_CACHE_UNVERIFIABLE` —
+     [Orphaned or unverifiable cache](#orphaned-or-unverifiable-cache).
+   - `DEVELOPMENT_MARKETPLACE_MISMATCH` —
+     [Marketplace owned elsewhere](#marketplace-owned-elsewhere).
+   - `DEVELOPMENT_LINK_MISMATCH` —
+     [Installed, linked elsewhere](#installed-linked-elsewhere).
+   - Anything else — report the code, its `message`, and its `nextAction`
+     rather than guessing a branch.
+2. `current.development` is `installed` and `current.linkedToCanonicalPayload`
+   is true — [Installed and linked](#installed-and-linked).
+3. `current.development` is `marketplace-only` — the Marketplace is registered
+   without its Plugin Installation. `bun run dev -- claude restore` owns that
+   recovery.
+4. `current.development` is `absent` — [Absent](#absent).
 
 ## Installed and linked
 
@@ -33,9 +46,8 @@ so `/reload-plugins` alone loads it. Bun-backed changes need
 
 ## Installed, linked elsewhere
 
-`current.development` is `installed` while `current.linkedToCanonicalPayload`
-is false, so another checkout owns the link. `install` reports
-`DEVELOPMENT_LINK_MISMATCH` here.
+`DEVELOPMENT_LINK_MISMATCH` means an installation exists but its link resolves
+to another checkout's payload, so that checkout owns development mode.
 
 Run `bun run dev -- claude restore` from the linked checkout to release it, or
 develop from that checkout instead.
