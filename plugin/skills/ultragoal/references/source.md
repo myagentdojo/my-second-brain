@@ -22,7 +22,6 @@ Adapted:
 - Remove the default `WORKLOG.md`; this vault preserves durable meaning, not
   activity logs.
 - Split activation by Harness. Upstream assumes the Codex `create_goal` tool is
-  always callable. Claude Code exposes no goal tools, so a skill there cannot
-  start a goal and emits a copyable `/goal` prompt instead. Probe for the tool
-  rather than assuming it, and never report an emitted prompt as an activated
-  goal.
+  always callable. Claude Code exposes no goal tools, so a skill there emits a
+  copyable `/goal` prompt instead. Activation reports a tool call or a pasted
+  prompt, which keeps an emitted prompt distinct from an activated goal.
