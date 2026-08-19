@@ -168,6 +168,7 @@ const packagedSkills = entries
 	.map((entry) => entry.slice(`${packageName}/skills/`.length, -"/SKILL.md".length))
 if (JSON.stringify(packagedSkills) !== JSON.stringify([
 	"capability-tour",
+	"dev-mode",
 	"hello-world",
 	"new-note",
 	"new-project",
@@ -279,6 +280,7 @@ console.log(
 			"skill-b",
 			"runtime-custody",
 			"capability-tour",
+			"dev-mode",
 			"new-note",
 			"new-project",
 			"ultragoal",
