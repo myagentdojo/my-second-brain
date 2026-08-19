@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 import {
 	buildReceiptPath,
@@ -107,12 +107,34 @@ test("a successful receipt whose digest disagrees never reports fresh", () => {
 	expect(evaluateFreshness(root).status).toBe("stale")
 })
 
-test("the receipt records the checkout, branch, and commit that built the payload", () => {
-	const receipt = readBuildReceipt(repositoryRoot)
+/**
+ * Assert against a receipt this test wrote, never the ambient one left by a
+ * local build. Reading the repository's own receipt passes on a machine that
+ * has built and fails in CI, where `.dev/` is gitignored and absent.
+ */
+test("the receipt records the checkout, version, and commit that built the payload", () => {
+	const root = checkoutWithRealPayload()
 
-	expect(receipt?.checkoutPath).toBe(repositoryRoot)
+	writeBuildReceipt(root, "succeeded")
+
+	const receipt = readBuildReceipt(root)
+	expect(receipt?.checkoutPath).toBe(resolve(root))
 	expect(receipt?.pluginVersion).toMatch(/^\d+\.\d+\.\d+$/)
-	expect(receipt?.headCommit).toMatch(/^[0-9a-f]{40}$/)
+	expect(receipt?.completedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+})
+
+/**
+ * A payload copied outside git still produces a usable receipt: the git fields
+ * are omitted rather than faked, and the digest that proves freshness is present.
+ */
+test("git identity is omitted outside a repository, and the digest still records", () => {
+	const outsideGit = checkoutWithRealPayload()
+
+	const receipt = writeBuildReceipt(outsideGit, "succeeded")
+
+	expect(receipt?.headCommit).toBeUndefined()
+	expect(receipt?.branch).toBeUndefined()
+	expect(receipt?.payloadDigest).toMatch(/^[0-9a-f]{64}$/)
 })
 
 /**
