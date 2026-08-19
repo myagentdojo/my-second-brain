@@ -257,6 +257,7 @@ export interface InstalledCapabilityEvidence {
 		"skill-b",
 		"runtime-custody",
 		"capability-tour",
+		"dev-mode",
 		"new-note",
 		"new-project",
 		"ultragoal",
@@ -1290,6 +1291,7 @@ export function proveInstalledCapabilityEvidence(
 		.map((path) => path.slice("skills/".length, -"/SKILL.md".length))
 	const portableSkills = [
 		"capability-tour",
+		"dev-mode",
 		"hello-world",
 		"new-note",
 		"new-project",
@@ -1408,6 +1410,7 @@ export function proveInstalledCapabilityEvidence(
 			"skill-b",
 			"runtime-custody",
 			"capability-tour",
+			"dev-mode",
 			"new-note",
 			"new-project",
 			"ultragoal",

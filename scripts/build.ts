@@ -1641,6 +1641,7 @@ const capabilityAssetFiles = [
 const modelOnlySkillFiles = [
 	"skills/capability-tour/SKILL.md",
 	"skills/capability-tour/references/capability-reviewer.md",
+	"skills/dev-mode/SKILL.md",
 	"skills/new-note/SKILL.md",
 	"skills/new-project/SKILL.md",
 	"skills/runtime-custody/SKILL.md",
