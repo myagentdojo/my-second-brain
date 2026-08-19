@@ -156,9 +156,11 @@ export class ClaudeDevelopmentInstallationError extends Error {
 			transactionState?: "blocked" | "restored" | "unknown"
 			retrySafety?: "safe" | "unsafe" | "inspect_required"
 			sideEffects?: string[]
-			nextAction?: string
+			// Required: a default here would silently name one command as the
+			// recovery for every failure, including that command's own.
+			nextAction: string
 			cause?: unknown
-		} = {},
+		},
 	) {
 		super(message, options.cause === undefined ? undefined : { cause: options.cause })
 		this.name = "ClaudeDevelopmentInstallationError"
@@ -169,7 +171,7 @@ export class ClaudeDevelopmentInstallationError extends Error {
 		this.transactionState = options.transactionState ?? "blocked"
 		this.retrySafety = options.retrySafety ?? "safe"
 		this.sideEffects = options.sideEffects ?? []
-		this.nextAction = options.nextAction ?? "Run `bun run dev -- claude check --json --no-input`."
+		this.nextAction = options.nextAction
 	}
 }
 
@@ -411,7 +413,11 @@ function parseVersion(value: string): [number, number, number] {
 		throw new ClaudeDevelopmentInstallationError(
 			"CLAUDE_VERSION_UNREADABLE",
 			"Claude Code returned an unreadable version",
-			{ errorFamily: "runtime", action: "FIX_INPUT" },
+			{
+				errorFamily: "runtime",
+				action: "FIX_INPUT",
+				nextAction: "Confirm `claude --version` runs and prints a version.",
+			},
 		)
 	}
 	return [Number(match[1]), Number(match[2]), Number(match[3])]
@@ -449,7 +455,12 @@ function restorableMarketplace(entry: ClaudeMarketplaceListEntry): RestorableMar
 				throw new ClaudeDevelopmentInstallationError(
 					"PRODUCTION_SOURCE_CONTAINS_CREDENTIALS",
 					"The production Marketplace source contains inline credentials and cannot be persisted safely",
-					{ action: "ASK_ADMIN", errorFamily: "auth" },
+					{
+						action: "ASK_ADMIN",
+						errorFamily: "auth",
+						nextAction:
+							"Re-add the production Marketplace from a source that carries no credentials, then retry.",
+					},
 				)
 			}
 			return {
@@ -461,7 +472,12 @@ function restorableMarketplace(entry: ClaudeMarketplaceListEntry): RestorableMar
 	throw new ClaudeDevelopmentInstallationError(
 		"PRODUCTION_SOURCE_UNRESTORABLE",
 		"The production Marketplace source cannot be reconstructed through the supported Claude CLI",
-		{ action: "ASK_ADMIN", errorFamily: "state" },
+		{
+			action: "ASK_ADMIN",
+			errorFamily: "state",
+			nextAction:
+				"Re-add the production Marketplace from a supported source before installing development mode.",
+		},
 	)
 }
 
@@ -493,6 +509,8 @@ function inspectState(
 			environment,
 			code: "PLUGIN_STATE_UNREADABLE",
 			label: "Claude Plugin Installation inspection",
+			nextAction:
+				"Confirm `claude --version` runs and prints a version.",
 		},
 	)
 	const marketplaces = jsonCommand<ClaudeMarketplaceListEntry[]>(
@@ -717,6 +735,8 @@ function readSnapshot(input: ClaudeDevelopmentInstallationInput): RestorationSna
 				action: "INSPECT_STATE",
 				errorFamily: "recovery",
 				retrySafety: "inspect_required",
+				nextAction:
+					"Inspect the profile with `claude plugin list`; this checkout holds no snapshot to restore from.",
 			},
 		)
 	}
@@ -740,6 +760,8 @@ function readSnapshot(input: ClaudeDevelopmentInstallationInput): RestorationSna
 				action: "INSPECT_STATE",
 				errorFamily: "recovery",
 				retrySafety: "inspect_required",
+				nextAction:
+					"Run restore from the checkout that captured the snapshot; this one did not.",
 			},
 		)
 	}
@@ -783,6 +805,8 @@ function restorationConflict(message: string, sideEffects: string[]): never {
 		transactionState: "unknown",
 		retrySafety: "inspect_required",
 		sideEffects,
+		nextAction:
+			"Inspect `claude plugin list` and reconcile it with the snapshot before retrying restore.",
 	})
 }
 
@@ -894,6 +918,8 @@ function restoreFromSnapshot(
 					transactionState: "unknown",
 					retrySafety: "inspect_required",
 					sideEffects: snapshot.sideEffects,
+					nextAction:
+						"Inspect `claude plugin list` and reconcile it with the snapshot before retrying restore.",
 				},
 			)
 		}
@@ -930,6 +956,8 @@ function restoreFromSnapshot(
 				transactionState: "unknown",
 				retrySafety: "inspect_required",
 				sideEffects: snapshot.sideEffects,
+				nextAction:
+					"Compare `claude plugin list` against the snapshot and reconcile the difference by hand.",
 			},
 		)
 	}
@@ -967,6 +995,8 @@ function failInstallAfterRestoration(
 				retrySafety: "inspect_required",
 				sideEffects: snapshot.sideEffects,
 				cause,
+				nextAction:
+					"Inspect `claude plugin list`; neither the installation nor the prior state is proven.",
 			},
 		)
 	}
@@ -981,6 +1011,8 @@ function failInstallAfterRestoration(
 			retrySafety: "safe",
 			sideEffects: snapshot.sideEffects,
 			cause,
+			nextAction:
+				"Read the cause in this message, resolve it, then rerun install.",
 		},
 	)
 }
@@ -1050,7 +1082,12 @@ function prepare(input: ClaudeDevelopmentInstallationInput, runner: CommandRunne
 			throw new ClaudeDevelopmentInstallationError(
 				"CLAUDE_VERSION_UNSUPPORTED",
 				"Claude Code 2.1.229 or later is required for command-source link mode",
-				{ action: "FIX_INPUT", errorFamily: "runtime" },
+				{
+					action: "FIX_INPUT",
+					errorFamily: "runtime",
+					nextAction:
+						"Update Claude Code to 2.1.229 or later, the first release with command-source link mode.",
+				},
 			)
 		}
 		command(runner, ["claude", "plugin", "validate", root], {
@@ -1107,7 +1144,12 @@ function install(
 				throw new ClaudeDevelopmentInstallationError(
 					"DEVELOPMENT_VERIFICATION_FAILED",
 					"Claude did not report one enabled live-linked Development Installation",
-					{ action: "RUN_RESTORE", errorFamily: "verification" },
+					{
+						action: "RUN_RESTORE",
+						errorFamily: "verification",
+						nextAction:
+							"Run `bun run dev -- claude restore` to clear the unverified installation, then install again.",
+					},
 				)
 			}
 			snapshot.transactionState = "development_installed"
@@ -1199,7 +1241,12 @@ function install(
 			throw new ClaudeDevelopmentInstallationError(
 				"DEVELOPMENT_VERIFICATION_FAILED",
 				"Claude did not report one enabled live-linked Development Installation",
-				{ action: "RUN_RESTORE", errorFamily: "verification" },
+				{
+					action: "RUN_RESTORE",
+					errorFamily: "verification",
+					nextAction:
+						"Run `bun run dev -- claude restore` to clear the unverified installation, then install again.",
+				},
 			)
 		}
 		snapshot.transactionState = "development_installed"
@@ -1271,6 +1318,8 @@ function restore(
 				transactionState: "unknown",
 				retrySafety: "inspect_required",
 				sideEffects: snapshot.sideEffects,
+				nextAction:
+					"Inspect `claude plugin list` and reconcile the profile with the snapshot by hand.",
 			},
 		)
 	}

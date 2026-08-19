@@ -3,9 +3,10 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
 /**
- * `nextAction` is the machine-readable recovery step, so an agent that trusts
- * it must not be sent back to the command that just failed. The generic
- * default names `check`, which is a loop for any error `check` itself raises.
+ * `nextAction` is the machine-readable recovery step. Its constructor no
+ * longer defaults, so omitting it fails to compile — but a site can still
+ * satisfy the type while naming the command that just failed. `check` runs on
+ * every operation, so no error may send a caller back to it.
  */
 const source = readFileSync(join(import.meta.dir, "claude-development-installation.ts"), "utf8")
 
@@ -20,24 +21,24 @@ function constructions(): { code: string; body: string }[] {
 	return found
 }
 
-test("every inspection error states a recovery step other than rerunning check", () => {
-	// Codes reachable from `check`, where the default would name the failing
-	// command. Errors raised only by install or restore may still point at
-	// `check`, because there it is a genuine next step.
-	const inspectionCodes = new Set([
-		"DEVELOPMENT_MARKETPLACE_MISMATCH",
-		"PRODUCTION_MARKETPLACE_MISSING",
-		"DEVELOPMENT_MARKETPLACE_MISSING",
-		"UNKNOWN_PLUGIN_IDENTITY",
-		"NON_USER_PLUGIN_IDENTITY",
-		"AMBIGUOUS_PLUGIN_IDENTITY",
-		"DEVELOPMENT_LINK_MISMATCH",
-	])
-
+test("every error states a recovery step", () => {
 	const silent = constructions()
-		.filter((entry) => inspectionCodes.has(entry.code))
 		.filter((entry) => !entry.body.includes("nextAction"))
 		.map((entry) => entry.code)
 
 	expect(silent).toEqual([])
+})
+
+test("no recovery step is a bare rerun of the command that failed", () => {
+	// Naming `check` after a repair step is a precondition, not a loop. Naming
+	// it as the whole recovery is the defect: the caller repeats the failure.
+	const looping = constructions()
+		.filter((entry) => /nextAction:\s*\n?\s*"Run `bun run dev -- claude check/.test(entry.body))
+		.map((entry) => entry.code)
+
+	expect(looping).toEqual([])
+})
+
+test("the constructor keeps no default recovery step to inherit", () => {
+	expect(source).not.toMatch(/nextAction\s*=\s*options\.nextAction\s*\?\?/)
 })
