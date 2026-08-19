@@ -17,9 +17,12 @@ This is a behavioral gate. Runtime-level Codex enforcement is not proved.
    stop boundary.
 2. Reconcile current Git state, active writers, accepted decisions, and granted
    authority.
-3. Keep the invoking agent as **Supervisor**. Own scope, approvals, checkout
+3. For a dirty owner checkout, record the pre-edit HEAD, index, tracked and
+   untracked inventory, named custody hashes, and every other owner's paths.
+   This baseline is the recovery oracle.
+4. Keep the invoking agent as **Supervisor**. Own scope, approvals, checkout
    custody, monitoring, intervention, review disposition, and final handback.
-4. Ask one question only when the unit, writer, or authority is materially
+5. Ask one question only when the unit, writer, or authority is materially
    ambiguous.
 
 No task supplied: ask which bounded unit and checkout Opus should receive.

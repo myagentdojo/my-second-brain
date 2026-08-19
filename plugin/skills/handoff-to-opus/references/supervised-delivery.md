@@ -26,8 +26,15 @@ unit and every continuation.
 ## Preflight dependencies
 
 Before creating a window, prove the implementation harness can discover the
-installed `handoff` and `code-review` skills. Stop before launch when either
-skill is absent or unreadable.
+installed `handoff` skill. For **Two-axis** review, also prove it can discover
+the installed `code-review` skill. Stop before launch when a dependency required
+by the bound mode is absent or unreadable. **Single-agent** review neither
+requires nor invokes `code-review`.
+
+Use repository-native commands and runners for every verification lane. Do not
+use MCP runners for tests, typecheck, lint, format, or other proof. If the
+native owner cannot express the named proof, stop before substituting another
+runner and return the exact missing capability to the Supervisor.
 
 ## Launch visibly
 
@@ -49,8 +56,11 @@ skill is absent or unreadable.
    launcher owns discovery but cannot forward model and effort, use its
    stage-only or no-launch route, then append its discovered plugin arguments
    to that exact Claude command.
-5. Verify the resolved model and effort before delivering the task packet.
-   Stop on an alias, fallback, or setting that cannot be resolved confidently.
+5. Prove the resolved model and effort accept one no-work probe turn before
+   delivering the task packet. A banner, alias, or setting that displays an
+   effort does not prove the model accepts it. Treat a rejected effort as an
+   unlaunched session, rebind a supported approved effort, and deliver the
+   packet once. Never let a rejected first turn consume the packet.
 6. Use Plan Mode for read-only preparation and normal interactive permissions
    for implementation.
 
@@ -65,6 +75,14 @@ another tmux session or a hidden background process.
 - Intervene on the wrong seam, scope crossing, contradicted accepted invariant,
   an abstraction not earned by the accepted spec, another writer's files,
   ungranted authority, or a repeated blocker without new evidence.
+- When RED needs a deliberate source perturbation, require the exact revert
+  before the next unrelated edit. Record the perturbed path, the restoring diff,
+  and the GREEN rerun that proves restoration. An unreverted perturbation in a
+  shared checkout is a blocker, not a pending step.
+- Keep shared dirty-checkout inspection read-only. Use a separate clean checkout
+  for counterfactual proof. Never stash, reset, restore, checkout, clean, or
+  switch branches to isolate a hypothesis in the shared checkout. A violation
+  ends the session at read-only inventory and Supervisor handoff.
 - End the implementation session at its verified handback or approved commit
   boundary. Use a fresh context for review.
 - Before a third correction on the same issue, roll over through `handoff` with
@@ -102,16 +120,21 @@ dependency or unreadable checkpoint.
 1. Snapshot HEAD, index, worktree, and untracked state. Use a dedicated clean
    checkout when the reviewed target is committed; otherwise retain the owner
    checkout needed to expose the exact uncommitted diff.
-2. Start a fresh Opus session with `--permission-mode plan` and report-only
-   authority. Give it the exact fixed point and implementation diff. Have the
-   Supervisor explicitly invoke `code-review` for standards and correctness
-   findings with exact evidence.
-3. Recheck HEAD, index, worktree, and untracked state after review. Any drift
+2. Bind one review delegation mode before launch:
+   - **Two-axis**: explicitly invoke `code-review`; admit only its declared
+     Standards and Spec sub-agents.
+   - **Single-agent**: when the user or packet forbids sub-agents, do not invoke
+     `code-review`; give the fresh reviewer both axes and require direct review.
+   Never combine a no-sub-agents packet with the sub-agent-owning workflow.
+3. Start a fresh Opus session with `--permission-mode plan` and report-only
+   authority. Give it the exact fixed point and implementation diff. Require
+   standards and correctness findings with exact evidence under the bound mode.
+4. Recheck HEAD, index, worktree, and untracked state after review. Any drift
    invalidates the review. Keep activation, push, PR, and external effects
    outside the reviewer authority.
-4. Have the Supervisor validate every finding. Route accepted fixes to a fresh
+5. Have the Supervisor validate every finding. Route accepted fixes to a fresh
    implementation session, then use a fresh reviewer.
-5. Stop after one repair cycle unless the user approves another.
+6. Stop after one repair cycle unless the user approves another.
 
 ## Hand back
 
