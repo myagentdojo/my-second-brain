@@ -3,42 +3,76 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
 /**
- * `nextAction` is the machine-readable recovery step. Its constructor no
- * longer defaults, so omitting it fails to compile — but a site can still
- * satisfy the type while naming the command that just failed. `check` runs on
- * every operation, so no error may send a caller back to it.
+ * `nextAction` is the machine-readable recovery step. The repository builds
+ * with Bun, which strips types without checking them, so the constructor's
+ * required parameter documents the contract rather than enforcing it. These
+ * assertions are the enforcement.
  */
-const source = readFileSync(join(import.meta.dir, "claude-development-installation.ts"), "utf8")
+const files = ["claude-development-installation.ts", "dev.ts"].map((name) => ({
+	name,
+	source: readFileSync(join(import.meta.dir, name), "utf8"),
+}))
 
-function constructions(): { code: string; body: string }[] {
-	const found: { code: string; body: string }[] = []
-	const pattern = /new ClaudeDevelopmentInstallationError\(\s*"([A-Z_]+)",([\s\S]*?)\n\t*\)/g
-	let match = pattern.exec(source)
-	while (match) {
-		found.push({ code: match[1] as string, body: match[2] as string })
-		match = pattern.exec(source)
+interface Construction {
+	file: string
+	code: string
+	body: string
+}
+
+/**
+ * Match every construction, including the helper sites whose first argument is
+ * `options.code` rather than a literal. A scan that only saw literals is how
+ * nine helper-fed sites stayed silent through an earlier audit.
+ */
+function constructions(): Construction[] {
+	const found: Construction[] = []
+	for (const { name, source } of files) {
+		const pattern = /new ClaudeDevelopmentInstallationError\(\s*([^,]+),([\s\S]*?)\n\t*\)/g
+		let match = pattern.exec(source)
+		while (match) {
+			found.push({
+				file: name,
+				code: (match[1] as string).trim().replace(/^"|"$/g, ""),
+				body: match[2] as string,
+			})
+			match = pattern.exec(source)
+		}
 	}
 	return found
 }
 
-test("every error states a recovery step", () => {
+test("every error construction states a recovery step", () => {
 	const silent = constructions()
 		.filter((entry) => !entry.body.includes("nextAction"))
-		.map((entry) => entry.code)
+		.map((entry) => `${entry.file}:${entry.code}`)
 
 	expect(silent).toEqual([])
+})
+
+test("the scan reaches both literal and helper-fed constructions", () => {
+	const all = constructions()
+	// A scan that matched nothing would satisfy every other assertion here.
+	expect(all.length).toBeGreaterThanOrEqual(28)
+	expect(all.some((entry) => entry.code === "options.code")).toBe(true)
+	expect(all.some((entry) => entry.code === "DEVELOPMENT_CACHE_ORPHANED")).toBe(true)
+	expect(all.some((entry) => entry.file === "dev.ts")).toBe(true)
 })
 
 test("no recovery step is a bare rerun of the command that failed", () => {
 	// Naming `check` after a repair step is a precondition, not a loop. Naming
 	// it as the whole recovery is the defect: the caller repeats the failure.
 	const looping = constructions()
-		.filter((entry) => /nextAction:\s*\n?\s*"Run `bun run dev -- claude check/.test(entry.body))
-		.map((entry) => entry.code)
+		.filter((entry) =>
+			/nextAction:\s*\n?\s*[`"]Run\s+\\?`?bun run dev -- claude check/.test(entry.body),
+		)
+		.map((entry) => `${entry.file}:${entry.code}`)
 
 	expect(looping).toEqual([])
 })
 
 test("the constructor keeps no default recovery step to inherit", () => {
-	expect(source).not.toMatch(/nextAction\s*=\s*options\.nextAction\s*\?\?/)
+	for (const { source } of files) {
+		expect(source).not.toMatch(/nextAction\s*=\s*options\.nextAction\s*\?\?/)
+		expect(source).not.toMatch(/nextAction\?\s*:/)
+	}
 })

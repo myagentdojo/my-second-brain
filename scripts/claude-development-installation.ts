@@ -190,6 +190,19 @@ function firstReportedLine(output: string | undefined): string | undefined {
 	return redacted.length > 200 ? `${redacted.slice(0, 200)}...` : redacted
 }
 
+/**
+ * Name the source that owns a Marketplace entry.
+ *
+ * Only a directory source carries `path`, so a `github`, `git`, or `url` entry
+ * would otherwise report as anonymous while the field naming it sits unread. A
+ * URL may carry userinfo, which this file refuses to persist elsewhere.
+ */
+function describeMarketplaceSource(entry: ClaudeMarketplaceListEntry): string {
+	const named = entry.path ?? entry.repo ?? entry.url
+	if (!named) return `another ${entry.source} source`
+	return firstReportedLine(named) ?? `another ${entry.source} source`
+}
+
 function command(
 	runner: CommandRunner,
 	commandArguments: readonly string[],
@@ -198,6 +211,7 @@ function command(
 		environment: Record<string, string | undefined>
 		code: string
 		label: string
+		nextAction: string
 		timeout?: number
 	},
 ): string {
@@ -212,6 +226,7 @@ function command(
 		throw new ClaudeDevelopmentInstallationError(options.code, `${options.label} could not start`, {
 			errorFamily: "runtime",
 			action: "FIX_INPUT",
+			nextAction: options.nextAction,
 		})
 	}
 	if (result.exitCode !== 0) {
@@ -225,6 +240,7 @@ function command(
 			{
 				errorFamily: result.exitCode === 124 ? "timeout" : "runtime",
 				action: result.exitCode === 124 ? "INSPECT_STATE" : "FIX_INPUT",
+				nextAction: options.nextAction,
 			},
 		)
 	}
@@ -243,7 +259,7 @@ function jsonCommand<T>(
 		throw new ClaudeDevelopmentInstallationError(
 			options.code,
 			`${options.label} returned unreadable JSON`,
-			{ errorFamily: "protocol", action: "INSPECT_STATE" },
+			{ errorFamily: "protocol", action: "INSPECT_STATE", nextAction: options.nextAction },
 		)
 	}
 }
@@ -508,6 +524,7 @@ function inspectState(
 			repositoryRoot,
 			environment,
 			code: "PLUGIN_STATE_UNREADABLE",
+			nextAction: "Confirm `claude plugin list --json` runs and prints JSON.",
 			label: "Claude Plugin Installation inspection",
 			nextAction:
 				"Confirm `claude --version` runs and prints a version.",
@@ -520,6 +537,7 @@ function inspectState(
 			repositoryRoot,
 			environment,
 			code: "MARKETPLACE_STATE_UNREADABLE",
+			nextAction: "Confirm `claude plugin marketplace list --json` runs and prints JSON.",
 			label: "Claude Marketplace inspection",
 		},
 	)
@@ -576,7 +594,7 @@ function inspectState(
 	) {
 		throw new ClaudeDevelopmentInstallationError(
 			"DEVELOPMENT_MARKETPLACE_MISMATCH",
-			`The development Marketplace name is owned by ${developmentMarketplace.path ?? "another source"} rather than ${marketplaceRoot(repositoryRoot)}`,
+			`The development Marketplace name is owned by ${describeMarketplaceSource(developmentMarketplace)} rather than ${marketplaceRoot(repositoryRoot)}`,
 			{
 				action: "INSPECT_STATE",
 				errorFamily: "conflict",
@@ -829,6 +847,7 @@ function nativeMutation(
 		repositoryRoot: input.repositoryRoot,
 		environment: input.environment,
 		code: "CLAUDE_MUTATION_FAILED",
+		nextAction: "Read the reported cause, resolve it, then rerun this operation.",
 		label,
 	})
 	snapshot.sideEffects.push(sideEffect)
@@ -1037,6 +1056,7 @@ function inspectStateForRecovery(
 					repositoryRoot,
 					environment,
 					code: "PLUGIN_STATE_UNREADABLE",
+					nextAction: "Confirm `claude plugin list --json` runs and prints JSON.",
 					label: "Claude Plugin Installation recovery inspection",
 				},
 			)
@@ -1047,6 +1067,7 @@ function inspectStateForRecovery(
 					repositoryRoot,
 					environment,
 					code: "MARKETPLACE_STATE_UNREADABLE",
+					nextAction: "Confirm `claude plugin marketplace list --json` runs and prints JSON.",
 					label: "Claude Marketplace recovery inspection",
 				},
 			)
@@ -1068,6 +1089,7 @@ function prepare(input: ClaudeDevelopmentInstallationInput, runner: CommandRunne
 			repositoryRoot: input.repositoryRoot,
 			environment: input.environment,
 			code: "BUILD_FAILED",
+			nextAction: "Run `bun run build` and fix the reported build failure.",
 			label: "Plugin Payload build",
 			timeout: 120_000,
 		})
@@ -1076,6 +1098,7 @@ function prepare(input: ClaudeDevelopmentInstallationInput, runner: CommandRunne
 			repositoryRoot: input.repositoryRoot,
 			environment: input.environment,
 			code: "CLAUDE_UNAVAILABLE",
+			nextAction: "Confirm `claude` is on PATH and `claude --version` runs.",
 			label: "Claude Code version inspection",
 		})
 		if (!versionAtLeast(parseVersion(versionOutput), MINIMUM_COMMAND_SOURCE_VERSION)) {
@@ -1094,6 +1117,7 @@ function prepare(input: ClaudeDevelopmentInstallationInput, runner: CommandRunne
 			repositoryRoot: input.repositoryRoot,
 			environment: input.environment,
 			code: "DEVELOPMENT_MARKETPLACE_INVALID",
+			nextAction: "Run `claude plugin validate` on the development Marketplace and fix what it reports.",
 			label: "Claude development Marketplace validation",
 		})
 	}
@@ -1359,6 +1383,7 @@ async function runWatch(
 								repositoryRoot: input.repositoryRoot,
 								environment: input.environment,
 								code: "BUILD_FAILED",
+								nextAction: "Run `bun run build` and fix the reported build failure.",
 								label: "Plugin Payload rebuild",
 								timeout: 120_000,
 							})
