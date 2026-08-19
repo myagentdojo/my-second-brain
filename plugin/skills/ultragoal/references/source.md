@@ -10,7 +10,7 @@
 Preserved:
 
 - Design, critique, activation, and continuation modes.
-- Explicit activation before calling `create_goal`.
+- Explicit activation before a goal is started on any Harness.
 - Objective, boundary, verifier, and completion-proof discipline.
 - No inferred token budget.
 
@@ -21,3 +21,8 @@ Adapted:
   completion-only.
 - Remove the default `WORKLOG.md`; this vault preserves durable meaning, not
   activity logs.
+- Split activation by Harness. Upstream assumes the Codex `create_goal` tool is
+  always callable. Claude Code exposes no goal tools, so a skill there cannot
+  start a goal and emits a copyable `/goal` prompt instead. Probe for the tool
+  rather than assuming it, and never report an emitted prompt as an activated
+  goal.
