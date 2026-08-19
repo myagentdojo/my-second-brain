@@ -513,14 +513,22 @@ function inspectState(
 		throw new ClaudeDevelopmentInstallationError(
 			"UNKNOWN_PLUGIN_IDENTITY",
 			"Claude reports an unowned plugin identity with the same plugin name",
-			{ action: "ASK_ADMIN", errorFamily: "state" },
+			{
+				action: "ASK_ADMIN",
+				errorFamily: "state",
+				nextAction: "Inspect `claude plugin list` and remove the installation this repository does not own.",
+			},
 		)
 	}
 	if (relatedPlugins.some((entry) => entry.scope !== "user")) {
 		throw new ClaudeDevelopmentInstallationError(
 			"NON_USER_PLUGIN_IDENTITY",
 			"A project or local plugin identity must be removed by its owning scope before global development installation",
-			{ action: "ASK_ADMIN", errorFamily: "scope" },
+			{
+				action: "ASK_ADMIN",
+				errorFamily: "scope",
+				nextAction: "Remove the project or local installation with `claude plugin uninstall --scope <scope>`.",
+			},
 		)
 	}
 	const productionPlugins = relatedPlugins.filter((entry) => entry.id === productionId)
@@ -529,7 +537,11 @@ function inspectState(
 		throw new ClaudeDevelopmentInstallationError(
 			"AMBIGUOUS_PLUGIN_IDENTITY",
 			"Claude reports more than one installation for a known plugin identity",
-			{ action: "ASK_ADMIN", errorFamily: "state" },
+			{
+				action: "ASK_ADMIN",
+				errorFamily: "state",
+				nextAction: "Inspect `claude plugin list` and remove installations until one remains.",
+			},
 		)
 	}
 	const productionMarketplace = marketplaces.find((entry) => entry.name === pluginName)
@@ -546,22 +558,34 @@ function inspectState(
 	) {
 		throw new ClaudeDevelopmentInstallationError(
 			"DEVELOPMENT_MARKETPLACE_MISMATCH",
-			"The development Marketplace name is owned by another source",
-			{ action: "INSPECT_STATE", errorFamily: "conflict" },
+			`The development Marketplace name is owned by ${developmentMarketplace.path ?? "another source"} rather than ${marketplaceRoot(repositoryRoot)}`,
+			{
+				action: "INSPECT_STATE",
+				errorFamily: "conflict",
+				nextAction: `Develop from the checkout that owns it, or release the name with \`bun run dev -- claude restore\` there.`,
+			},
 		)
 	}
 	if (productionPlugin && !productionMarketplace) {
 		throw new ClaudeDevelopmentInstallationError(
 			"PRODUCTION_MARKETPLACE_MISSING",
 			"The production Plugin Installation has no matching Marketplace",
-			{ action: "ASK_ADMIN", errorFamily: "state" },
+			{
+				action: "ASK_ADMIN",
+				errorFamily: "state",
+				nextAction: "Reinstall or remove the production Plugin Installation through `claude plugin`, then rerun this check.",
+			},
 		)
 	}
 	if (developmentPlugin && !developmentMarketplace) {
 		throw new ClaudeDevelopmentInstallationError(
 			"DEVELOPMENT_MARKETPLACE_MISSING",
 			"The development Plugin Installation has no matching Marketplace",
-			{ action: "INSPECT_STATE", errorFamily: "state" },
+			{
+				action: "INSPECT_STATE",
+				errorFamily: "state",
+				nextAction: "Run `bun run dev -- claude restore` to remove the installation left without its Marketplace.",
+			},
 		)
 	}
 	if (!developmentPlugin && developmentMarketplace) {
@@ -1104,7 +1128,12 @@ function install(
 		throw new ClaudeDevelopmentInstallationError(
 			"DEVELOPMENT_LINK_MISMATCH",
 			"The development Plugin Installation is not linked to this checkout's canonical payload",
-			{ action: "RUN_RESTORE", errorFamily: "conflict" },
+			{
+				action: "RUN_RESTORE",
+				errorFamily: "conflict",
+				nextAction:
+					"Run `bun run dev -- claude restore` from the checkout the link resolves to, or develop from that checkout instead.",
+			},
 		)
 	}
 	if (!input.apply) {
@@ -1433,7 +1462,12 @@ export async function runClaudeDevelopmentInstallation(
 				throw new ClaudeDevelopmentInstallationError(
 					"DEVELOPMENT_LINK_MISMATCH",
 					"The development Plugin Installation is not linked to this checkout's canonical payload",
-					{ action: "RUN_RESTORE", errorFamily: "conflict" },
+					{
+						action: "RUN_RESTORE",
+						errorFamily: "conflict",
+						nextAction:
+							"Run `bun run dev -- claude restore` from the checkout the link resolves to, or develop from that checkout instead.",
+					},
 				)
 			}
 			return result(input, state, {
