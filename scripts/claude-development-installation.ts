@@ -97,6 +97,14 @@ interface OrphanedDevelopmentCache {
 }
 
 interface InspectedState {
+	/**
+	 * The plugin name both inspectors already resolved to read the profile.
+	 *
+	 * Carrying it means a consumer of this state names the same plugin the
+	 * inspection named, instead of re-reading plugin.config.json and being
+	 * able to disagree with the state it was handed.
+	 */
+	pluginName: string
 	productionPlugin?: ClaudePluginListEntry
 	developmentPlugin?: ClaudePluginListEntry
 	productionMarketplace?: ClaudeMarketplaceListEntry
@@ -724,6 +732,7 @@ function inspectState(
 		)
 	}
 	return {
+		pluginName,
 		productionPlugin,
 		developmentPlugin,
 		productionMarketplace,
@@ -799,7 +808,8 @@ function readyNextAction(freshness: Freshness, ready: string): string {
  * command, matching every other producer here, so an agent dispatching on it
  * reads a single next step rather than choosing between two.
  */
-function installPreviewNextAction(state: InspectedState, pluginName: string): string {
+function installPreviewNextAction(state: InspectedState): string {
+	const pluginName = state.pluginName
 	const replacements: string[] = []
 	if (state.productionPlugin) {
 		replacements.push(`uninstall \`${productionPluginId(pluginName)}\` with \`--keep-data\``)
@@ -1213,6 +1223,7 @@ function inspectStateForRecovery(
 				},
 			)
 			return {
+				pluginName,
 				productionPlugin: plugins.find((entry) => entry.id === productionPluginId(pluginName)),
 				developmentPlugin: plugins.find((entry) => entry.id === `${pluginName}@${pluginName}-dev`),
 				productionMarketplace: marketplaces.find((entry) => entry.name === pluginName),
@@ -1376,9 +1387,7 @@ function install(
 			mode: "preview",
 			changed: false,
 			transactionState: "previewed",
-			// The snapshot that carries `pluginName` is captured below, after this
-			// preview returns, so the name is read from its own owner here.
-			nextAction: installPreviewNextAction(state, loadPluginConfig(input.repositoryRoot).name),
+			nextAction: installPreviewNextAction(state),
 		})
 	}
 	const snapshot = capturePriorState(input, state)
