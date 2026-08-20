@@ -799,10 +799,15 @@ function readyNextAction(freshness: Freshness, ready: string): string {
 /**
  * What `--apply` will do to the profile, named rather than summarized.
  *
- * `--apply` uninstalls the production Plugin Installation and removes its
- * Marketplace before installing the development one. The preview is the only
- * disclosure before that write, so a sentence that reads the same whether or
- * not production is present asks for consent to an action it never names.
+ * `--apply` uninstalls the production Plugin Installation when one exists, and
+ * removes the production Marketplace when that exists, before installing the
+ * development one. A Marketplace can stand without its Plugin Installation,
+ * though the reverse throws `PRODUCTION_MARKETPLACE_MISSING` before reaching
+ * here, so the sentence names only the mutations this profile will see.
+ *
+ * The preview is the only disclosure before that write, so a sentence that
+ * reads the same whether or not production is present asks for consent to an
+ * action it never names.
  *
  * The replacement is disclosed, not instructed. `nextAction` carries one
  * command, matching every other producer here, so an agent dispatching on it
