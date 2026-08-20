@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.0](https://github.com/myagentdojo/my-second-brain-plugin/compare/v0.1.2...v0.2.0) (2026-08-20)
+
+
+### Features
+
+* **dev:** add persistent Claude development installation ([#7](https://github.com/myagentdojo/my-second-brain-plugin/issues/7)) ([c34cf6b](https://github.com/myagentdojo/my-second-brain-plugin/commit/c34cf6bc01d8c94a77c5a27f84a7f42d5481d6fa))
+* **dev:** detect an orphaned development cache and add a dev-mode skill ([#11](https://github.com/myagentdojo/my-second-brain-plugin/issues/11)) ([1a192dc](https://github.com/myagentdojo/my-second-brain-plugin/commit/1a192dcfe64fb5d797affcd53e414ebe6875c652))
+* **skills:** add supervised Opus handoff ([#15](https://github.com/myagentdojo/my-second-brain-plugin/issues/15)) ([3cc23f6](https://github.com/myagentdojo/my-second-brain-plugin/commit/3cc23f6768e7aad9c3128144f1a185ab7d9b3b2d))
+
+
+### Bug Fixes
+
+* **dev:** let check read a profile installed from another checkout ([#13](https://github.com/myagentdojo/my-second-brain-plugin/issues/13)) ([312f0f1](https://github.com/myagentdojo/my-second-brain-plugin/commit/312f0f18aef1d3c6133a9dcbb5a3a0bb6cbb0577))
+* **dev:** require an explicit recovery step on every lifecycle error ([#12](https://github.com/myagentdojo/my-second-brain-plugin/issues/12)) ([057ab2f](https://github.com/myagentdojo/my-second-brain-plugin/commit/057ab2f6b8c8823aa73ebeb23514480d7c291769))
+* **skills:** split ultragoal activation by harness ([#10](https://github.com/myagentdojo/my-second-brain-plugin/issues/10)) ([b8d2654](https://github.com/myagentdojo/my-second-brain-plugin/commit/b8d265484d5a0b0a4ba7d4667e7f0c0ba03e8ee9))
+* **test:** bind the check-without-snapshot fixture to the configured plugin name ([#16](https://github.com/myagentdojo/my-second-brain-plugin/issues/16)) ([73ff186](https://github.com/myagentdojo/my-second-brain-plugin/commit/73ff1865e2f10846874c0a55132a28434474b000))
+* **test:** give the semver manifest table an explicit subprocess budget ([#17](https://github.com/myagentdojo/my-second-brain-plugin/issues/17)) ([5e94b94](https://github.com/myagentdojo/my-second-brain-plugin/commit/5e94b941f702d2f867e96bdfc18c82bf79b0a20a))
+
 ## [0.1.2](https://github.com/myagentdojo/my-second-brain-plugin/compare/v0.1.1...v0.1.2) (2026-08-16)
 
 
