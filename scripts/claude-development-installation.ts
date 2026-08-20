@@ -590,7 +590,7 @@ function inspectState(
 	runner: CommandRunner,
 ): InspectedState {
 	const pluginName = loadPluginConfig(repositoryRoot).name
-	const productionId = `${pluginName}@${pluginName}`
+	const productionId = productionPluginId(pluginName)
 	const developmentMarketplaceName = `${pluginName}-dev`
 	const developmentId = `${pluginName}@${developmentMarketplaceName}`
 	const plugins = jsonCommand<ClaudePluginListEntry[]>(
@@ -749,6 +749,17 @@ function inspectState(
 	}
 }
 
+/**
+ * The Plugin Installation id Claude lists for the production Marketplace.
+ *
+ * The id is one concept the glossary names, so the sites that need it read it
+ * from here rather than reassembling the same interpolation apart from one
+ * another.
+ */
+function productionPluginId(pluginName: string): string {
+	return `${pluginName}@${pluginName}`
+}
+
 function installationState(
 	plugin: ClaudePluginListEntry | undefined,
 	marketplace: ClaudeMarketplaceListEntry | undefined,
@@ -768,6 +779,14 @@ function installationState(
  * must be fixed first, because reloading there serves known-bad or unknown
  * bytes.
  */
+function readyNextAction(freshness: Freshness, ready: string): string {
+	if (freshness.status === "fresh") return ready
+	if (freshness.status === "stale") {
+		return `${freshness.reason} Run \`/reload-plugins\` so this session serves the current payload.`
+	}
+	return freshness.reason
+}
+
 /**
  * What `--apply` will do to the profile, named rather than summarized.
  *
@@ -775,13 +794,15 @@ function installationState(
  * Marketplace before installing the development one. The preview is the only
  * disclosure before that write, so a sentence that reads the same whether or
  * not production is present asks for consent to an action it never names.
+ *
+ * The replacement is disclosed, not instructed. `nextAction` carries one
+ * command, matching every other producer here, so an agent dispatching on it
+ * reads a single next step rather than choosing between two.
  */
 function installPreviewNextAction(state: InspectedState, pluginName: string): string {
 	const replacements: string[] = []
 	if (state.productionPlugin) {
-		replacements.push(
-			`uninstall \`${pluginName}@${pluginName}\` with \`--keep-data\``,
-		)
+		replacements.push(`uninstall \`${productionPluginId(pluginName)}\` with \`--keep-data\``)
 	}
 	if (state.productionMarketplace) {
 		replacements.push(`remove the \`${pluginName}\` Marketplace`)
@@ -789,17 +810,9 @@ function installPreviewNextAction(state: InspectedState, pluginName: string): st
 	if (replacements.length === 0) {
 		return "Review the planned development installation, then rerun with `--apply`."
 	}
-	// The snapshot records the source these are restored from, so the sentence
-	// names `restore` as the exit rather than implying the change is one-way.
-	return `\`--apply\` will ${replacements.join(" and ")}, then install development mode. \`bun run dev -- claude restore\` puts the production state back. Review this, then rerun with \`--apply\`.`
-}
-
-function readyNextAction(freshness: Freshness, ready: string): string {
-	if (freshness.status === "fresh") return ready
-	if (freshness.status === "stale") {
-		return `${freshness.reason} Run \`/reload-plugins\` so this session serves the current payload.`
-	}
-	return freshness.reason
+	// `restore` previews by default like every operation here, so naming it
+	// without `--apply` would describe a no-op as the recovery.
+	return `\`--apply\` will ${replacements.join(" and ")}, then install development mode. \`bun run dev -- claude restore --apply\` puts that production state back. Review the named replacement, then rerun with \`--apply\`.`
 }
 
 function result(
@@ -990,7 +1003,7 @@ function restoreFromSnapshot(
 	const pluginName = snapshot.pluginName
 	const developmentMarketplaceName = `${pluginName}-dev`
 	const developmentId = `${pluginName}@${developmentMarketplaceName}`
-	const productionId = `${pluginName}@${pluginName}`
+	const productionId = productionPluginId(pluginName)
 	let state = inspectStateForRecovery(input.repositoryRoot, input.environment, runner)
 	if (state.developmentPlugin) {
 		nativeMutation(
@@ -1200,7 +1213,7 @@ function inspectStateForRecovery(
 				},
 			)
 			return {
-				productionPlugin: plugins.find((entry) => entry.id === `${pluginName}@${pluginName}`),
+				productionPlugin: plugins.find((entry) => entry.id === productionPluginId(pluginName)),
 				developmentPlugin: plugins.find((entry) => entry.id === `${pluginName}@${pluginName}-dev`),
 				productionMarketplace: marketplaces.find((entry) => entry.name === pluginName),
 				developmentMarketplace: marketplaces.find((entry) => entry.name === `${pluginName}-dev`),
@@ -1363,12 +1376,14 @@ function install(
 			mode: "preview",
 			changed: false,
 			transactionState: "previewed",
+			// The snapshot that carries `pluginName` is captured below, after this
+			// preview returns, so the name is read from its own owner here.
 			nextAction: installPreviewNextAction(state, loadPluginConfig(input.repositoryRoot).name),
 		})
 	}
 	const snapshot = capturePriorState(input, state)
 	const pluginName = snapshot.pluginName
-	const productionId = `${pluginName}@${pluginName}`
+	const productionId = productionPluginId(pluginName)
 	const developmentMarketplaceName = `${pluginName}-dev`
 	const developmentId = `${pluginName}@${developmentMarketplaceName}`
 	try {
