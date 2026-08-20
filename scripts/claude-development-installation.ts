@@ -768,6 +768,32 @@ function installationState(
  * must be fixed first, because reloading there serves known-bad or unknown
  * bytes.
  */
+/**
+ * What `--apply` will do to the profile, named rather than summarized.
+ *
+ * `--apply` uninstalls the production Plugin Installation and removes its
+ * Marketplace before installing the development one. The preview is the only
+ * disclosure before that write, so a sentence that reads the same whether or
+ * not production is present asks for consent to an action it never names.
+ */
+function installPreviewNextAction(state: InspectedState, pluginName: string): string {
+	const replacements: string[] = []
+	if (state.productionPlugin) {
+		replacements.push(
+			`uninstall \`${pluginName}@${pluginName}\` with \`--keep-data\``,
+		)
+	}
+	if (state.productionMarketplace) {
+		replacements.push(`remove the \`${pluginName}\` Marketplace`)
+	}
+	if (replacements.length === 0) {
+		return "Review the planned development installation, then rerun with `--apply`."
+	}
+	// The snapshot records the source these are restored from, so the sentence
+	// names `restore` as the exit rather than implying the change is one-way.
+	return `\`--apply\` will ${replacements.join(" and ")}, then install development mode. \`bun run dev -- claude restore\` puts the production state back. Review this, then rerun with \`--apply\`.`
+}
+
 function readyNextAction(freshness: Freshness, ready: string): string {
 	if (freshness.status === "fresh") return ready
 	if (freshness.status === "stale") {
@@ -1337,7 +1363,7 @@ function install(
 			mode: "preview",
 			changed: false,
 			transactionState: "previewed",
-			nextAction: "Review the captured production state, then rerun with `--apply`.",
+			nextAction: installPreviewNextAction(state, loadPluginConfig(input.repositoryRoot).name),
 		})
 	}
 	const snapshot = capturePriorState(input, state)
