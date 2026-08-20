@@ -5,8 +5,10 @@ import { join } from "node:path"
 
 import { runClaudeDevelopmentInstallation } from "./claude-development-installation"
 import type { CommandRunner } from "./command-runner"
+import { loadPluginConfig } from "./plugin-config"
 
 const repositoryRoot = join(import.meta.dir, "..")
+const pluginName = loadPluginConfig(repositoryRoot).name
 const created: string[] = []
 
 afterEach(() => {
@@ -30,8 +32,8 @@ function profileLinkedToAnotherCheckout(): { root: string; runner: CommandRunner
 		root,
 		"plugins",
 		"cache",
-		"my-second-brain-dev",
-		"my-second-brain",
+		`${pluginName}-dev`,
+		pluginName,
 		"0.1.2-fake",
 	)
 	mkdirSync(cache, { recursive: true })
@@ -42,7 +44,7 @@ function profileLinkedToAnotherCheckout(): { root: string; runner: CommandRunner
 	symlinkSync(join(foreignPayload, "skills"), join(cache, "skills"))
 	const plugins = [
 		{
-			id: "my-second-brain@my-second-brain-dev",
+			id: `${pluginName}@${pluginName}-dev`,
 			version: "0.1.2",
 			scope: "user",
 			enabled: true,
@@ -51,7 +53,7 @@ function profileLinkedToAnotherCheckout(): { root: string; runner: CommandRunner
 	]
 	const marketplaces = [
 		{
-			name: "my-second-brain-dev",
+			name: `${pluginName}-dev`,
 			source: "directory",
 			path: join(repositoryRoot, ".dev", "claude", "marketplace"),
 		},
