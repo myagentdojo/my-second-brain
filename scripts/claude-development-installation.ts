@@ -26,9 +26,6 @@ const LINK_MARKER_FILE = ".claude-plugin-link"
 // recorded as unreadable rather than walked, so a layout change surfaces as an
 // unverifiable cache instead of a silent clean result.
 const MAXIMUM_CACHE_WALK_DEPTH = 3
-// Claude Code writes this into a cache directory it has stopped listing, so a
-// superseded version leaves a marker rather than a dangling link.
-const ORPHAN_MARKER_FILE = ".orphaned_at"
 
 export const claudeWatchSources = [
 	{ relativePath: "runtime", recursive: true },
@@ -345,6 +342,12 @@ function describeOrphanedDevelopmentCache(
  * superseded directory dangles nothing, because it points at the same live
  * payload as the installed one. Registration is the discriminator, so this
  * compares the directories on disk against the path Claude reports.
+ *
+ * Claude Code marks such a directory with `.orphaned_at` and later collects it
+ * on its own schedule. That marker is deliberately not the test here: it is an
+ * undocumented internal file, and gating on it would miss any directory left
+ * behind without one. Absence from `plugin list` is the property this
+ * lifecycle can state.
  */
 function describeSupersededCacheVersions(
 	pluginName: string,
