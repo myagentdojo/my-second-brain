@@ -1,5 +1,14 @@
 import { afterEach, expect, test } from "bun:test"
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import {
+	appendFileSync,
+	chmodSync,
+	cpSync,
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
@@ -12,8 +21,12 @@ import {
 
 const repositoryRoot = join(import.meta.dir, "..")
 const created: string[] = []
+const restoreWritable: string[] = []
 
 afterEach(() => {
+	// A directory locked to prove the unwritable path would otherwise leave a
+	// tree rmSync cannot descend into.
+	for (const directory of restoreWritable.splice(0)) chmodSync(directory, 0o700)
 	for (const directory of created.splice(0)) rmSync(directory, { force: true, recursive: true })
 })
 
@@ -162,10 +175,59 @@ test("the receipt lives outside the plugin payload", () => {
 })
 
 test("writing a receipt never throws, even into an unwritable location", () => {
-	const root = join(mkdtempSync(join(tmpdir(), "receipt-readonly-")), "missing-checkout")
-	created.push(root)
+	const checkout = mkdtempSync(join(tmpdir(), "receipt-readonly-"))
+	created.push(checkout)
+	// A checkout with a valid configuration reaches the write itself. Pointing
+	// at a missing directory returned at the configuration read instead, so the
+	// write path this names went unexercised.
+	writeFileSync(
+		join(checkout, "plugin.config.json"),
+		readFileSync(join(repositoryRoot, "plugin.config.json"), "utf8"),
+	)
+	const development = join(checkout, ".dev")
+	mkdirSync(development, { recursive: true })
+	chmodSync(development, 0o500)
+	restoreWritable.push(development)
 
-	expect(() => writeBuildReceipt(root, "succeeded")).not.toThrow()
+	expect(() => writeBuildReceipt(checkout, "succeeded")).not.toThrow()
+	expect(writeBuildReceipt(checkout, "succeeded")).toBeUndefined()
+})
+
+/**
+ * An invalid plugin.config.json is a build failure, and it is the failure most
+ * likely to break a build. Reading the version inside the write guard returned
+ * before the receipt was written, so `check` reported `unproven` rather than
+ * `build-failed` for exactly that case.
+ */
+test("a failure is recorded even when the plugin configuration cannot be read", () => {
+	const checkout = mkdtempSync(join(tmpdir(), "receipt-badconfig-"))
+	created.push(checkout)
+	writeFileSync(join(checkout, "plugin.config.json"), "{ not json")
+
+	const receipt = writeBuildReceipt(checkout, "failed", "bundler-failure")
+
+	expect(receipt?.outcome).toBe("failed")
+	expect(receipt?.pluginVersion).toBe("unknown")
+	expect(readBuildReceipt(checkout)?.outcome).toBe("failed")
+})
+
+test("a receipt from an unsupported schema version is rejected", () => {
+	const checkout = mkdtempSync(join(tmpdir(), "receipt-schema-"))
+	created.push(checkout)
+	writeFileSync(
+		join(checkout, "plugin.config.json"),
+		readFileSync(join(repositoryRoot, "plugin.config.json"), "utf8"),
+	)
+	const written = writeBuildReceipt(checkout, "succeeded")
+	expect(written).toBeDefined()
+	const path = buildReceiptPath(checkout)
+	// A digest that still matches is the point: only the schema disqualifies it.
+	writeFileSync(
+		path,
+		JSON.stringify({ ...JSON.parse(readFileSync(path, "utf8")), schemaVersion: 2 }),
+	)
+
+	expect(readBuildReceipt(checkout)).toBeUndefined()
 })
 
 /**

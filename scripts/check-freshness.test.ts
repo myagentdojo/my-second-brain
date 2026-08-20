@@ -172,3 +172,53 @@ test("the existing check contract still validates", async () => {
 	expect(result.current.linkedToCanonicalPayload).toBe(true)
 	expect(typeof result.nextAction).toBe("string")
 })
+
+/**
+ * `install` re-inspects the profile after enabling the plugin, and that second
+ * inspection reads the profile rather than the receipt. Letting the result
+ * re-evaluate freshness there compared the payload against the receipt the same
+ * run had just written, so it reported `fresh` beside a `nextAction` describing
+ * the state before the build.
+ *
+ * The two must describe one state. A reader that trusts the status over the
+ * guidance beside it is the masking this feature exists to end.
+ */
+test("install reports one freshness state in both the status and its guidance", async () => {
+	const { checkout, profile, runner } = linkedCheckout()
+	writeBuildReceipt(checkout, "failed", "bundler-failure")
+	// The re-enable branch needs a disabled installation and `--apply`; the
+	// plugin reports enabled only after the enable command runs.
+	let enabled = false
+	const reEnabling: CommandRunner = {
+		run(commandArguments: readonly string[]) {
+			const line = commandArguments.join(" ")
+			if (line.includes("plugin enable")) {
+				enabled = true
+				return { exitCode: 0, stdout: "", stderr: "" }
+			}
+			// `prepare` shells out to the build, and a real build rewrites the
+			// receipt. Without that the pre-build and post-build reads return
+			// the same value and the divergence cannot appear.
+			if (line.includes("bun run build")) {
+				writeBuildReceipt(checkout, "succeeded")
+				return { exitCode: 0, stdout: "", stderr: "" }
+			}
+			const response = runner.run(commandArguments)
+			if (!line.includes("plugin list")) return response
+			const plugins = JSON.parse(response.stdout) as { enabled: boolean }[]
+			for (const plugin of plugins) plugin.enabled = enabled
+			return { ...response, stdout: JSON.stringify(plugins) }
+		},
+	}
+
+	const result = await runClaudeDevelopmentInstallation({
+		operation: "install",
+		apply: true,
+		repositoryRoot: checkout,
+		environment: { CLAUDE_CONFIG_DIR: profile, HOME: profile, PATH: process.env.PATH },
+		runner: reEnabling,
+	})
+
+	expect(result.current.freshness.status).toBe("build-failed")
+	expect(result.nextAction).toContain("bundler-failure")
+})

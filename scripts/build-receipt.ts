@@ -139,6 +139,20 @@ export function buildReceiptPath(checkoutPath: string): string {
  * writeBuildReceipt(root, "succeeded")
  * ```
  */
+/**
+ * The version, or `"unknown"` when plugin.config.json cannot be read.
+ *
+ * The field is required, and a reader rejects a receipt without it, so an
+ * unreadable configuration has to yield a value rather than omit the field.
+ */
+function readPluginVersion(checkoutPath: string): string {
+	try {
+		return loadPluginConfig(checkoutPath).version
+	} catch {
+		return "unknown"
+	}
+}
+
 export function writeBuildReceipt(
 	checkoutPath: string,
 	outcome: BuildReceiptOutcome,
@@ -151,7 +165,11 @@ export function writeBuildReceipt(
 			completedAt: new Date().toISOString(),
 			outcome,
 			checkoutPath: resolve(checkoutPath),
-			pluginVersion: loadPluginConfig(checkoutPath).version,
+			// An invalid plugin.config.json is a build failure this receipt must
+			// still record. Reading it inside the guard below would return
+			// without writing, so the failure most likely to break a build would
+			// leave `check` reporting `unproven` instead of `build-failed`.
+			pluginVersion: readPluginVersion(checkoutPath),
 		}
 		const branch = currentBranch(checkoutPath)
 		if (branch) receipt.branch = branch
@@ -182,7 +200,9 @@ function parseReceipt(value: unknown): BuildReceipt | undefined {
 	if (candidate.outcome !== "succeeded" && candidate.outcome !== "failed") return undefined
 	if (typeof candidate.checkoutPath !== "string") return undefined
 	if (typeof candidate.pluginVersion !== "string") return undefined
-	if (typeof candidate.schemaVersion !== "number") return undefined
+	// A receipt from another schema can still carry a matching digest, so
+	// accepting any number would let it pass verification and report `fresh`.
+	if (candidate.schemaVersion !== BUILD_RECEIPT_SCHEMA_VERSION) return undefined
 	const receipt: BuildReceipt = {
 		schemaVersion: candidate.schemaVersion,
 		contractId: "plugin.build-receipt",

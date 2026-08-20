@@ -1286,6 +1286,12 @@ function install(
 				snapshot,
 			)
 			const enabled = inspectState(input.repositoryRoot, input.environment, runner)
+			// Re-inspection reads the profile again, not the receipt, so it must
+			// carry the pre-build snapshot forward. Letting `result` re-evaluate
+			// here would compare the payload against the receipt this run just
+			// wrote and report `fresh` beside a `nextAction` describing the
+			// state before it, which is the masking this feature exists to end.
+			enabled.freshness = state.freshness
 			if (!enabled.developmentPlugin?.enabled || !enabled.linkedToCanonicalPayload) {
 				throw new ClaudeDevelopmentInstallationError(
 					"DEVELOPMENT_VERIFICATION_FAILED",
