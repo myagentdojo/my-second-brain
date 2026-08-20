@@ -101,6 +101,9 @@ for (const required of [
 	`${packageName}/hooks/native-capability-hook`,
 	`${packageName}/skills/capability-tour/SKILL.md`,
 	`${packageName}/skills/capability-tour/references/capability-reviewer.md`,
+	`${packageName}/skills/handoff-to-opus/SKILL.md`,
+	`${packageName}/skills/handoff-to-opus/references/coderabbit-exact-range.md`,
+	`${packageName}/skills/handoff-to-opus/references/supervised-delivery.md`,
 	`${packageName}/skills/hello-world/SKILL.md`,
 	`${packageName}/skills/runtime-custody/SKILL.md`,
 	`${packageName}/skills/skill-a/SKILL.md`,
@@ -169,6 +172,7 @@ const packagedSkills = entries
 if (JSON.stringify(packagedSkills) !== JSON.stringify([
 	"capability-tour",
 	"dev-mode",
+	"handoff-to-opus",
 	"hello-world",
 	"new-note",
 	"new-project",

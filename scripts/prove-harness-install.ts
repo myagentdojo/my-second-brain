@@ -236,6 +236,19 @@ export interface CodexProof {
 	} | null
 }
 
+const PORTABLE_SKILLS_WITHOUT_HOOKS = [
+	"hello-world",
+	"skill-a",
+	"skill-b",
+	"runtime-custody",
+	"capability-tour",
+	"dev-mode",
+	"handoff-to-opus",
+	"new-note",
+	"new-project",
+	"ultragoal",
+] as const
+
 export interface InstalledCapabilityEvidence {
 	candidateCommit: string
 	candidatePayloadHash: string
@@ -251,17 +264,7 @@ export interface InstalledCapabilityEvidence {
 		| { status: "not-proved"; receipt: null }
 		| { status: "proved"; receipt: NativeQualificationEvidence }
 		| { status: "failed"; receipt: NativeQualificationEvidence }
-	portableSkillsWithoutHooks: [
-		"hello-world",
-		"skill-a",
-		"skill-b",
-		"runtime-custody",
-		"capability-tour",
-		"dev-mode",
-		"new-note",
-		"new-project",
-		"ultragoal",
-	]
+	portableSkillsWithoutHooks: typeof PORTABLE_SKILLS_WITHOUT_HOOKS
 }
 
 /** Hash-only conclusions that may be promoted from a private fresh-client receipt. */
@@ -1289,17 +1292,7 @@ export function proveInstalledCapabilityEvidence(
 	const installedSkills = installedInventory
 		.filter((path) => /^skills\/[^/]+\/SKILL\.md$/.test(path))
 		.map((path) => path.slice("skills/".length, -"/SKILL.md".length))
-	const portableSkills = [
-		"capability-tour",
-		"dev-mode",
-		"hello-world",
-		"new-note",
-		"new-project",
-		"runtime-custody",
-		"skill-a",
-		"skill-b",
-		"ultragoal",
-	]
+	const portableSkills = [...PORTABLE_SKILLS_WITHOUT_HOOKS].sort()
 	if (JSON.stringify(installedSkills) !== JSON.stringify(portableSkills)) {
 		throw new Error(`${client} installed portable skill inventory differs`)
 	}
@@ -1404,17 +1397,7 @@ export function proveInstalledCapabilityEvidence(
 		externalCandidateQualification: nativeProved ? "proved" : "unknown",
 		nativeDelegation: nativeProved ? "proved" : "not-proved",
 		nativeQualification,
-		portableSkillsWithoutHooks: [
-			"hello-world",
-			"skill-a",
-			"skill-b",
-			"runtime-custody",
-			"capability-tour",
-			"dev-mode",
-			"new-note",
-			"new-project",
-			"ultragoal",
-		],
+		portableSkillsWithoutHooks: PORTABLE_SKILLS_WITHOUT_HOOKS,
 	}
 }
 
